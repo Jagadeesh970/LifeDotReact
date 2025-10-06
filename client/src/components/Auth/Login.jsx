@@ -1,64 +1,61 @@
-import { useContext, useState } from "react";
+import { useState, useContext } from "react";
+import { Navigate, Link } from "react-router-dom";
 import { AuthStore } from "../../Store/AuthStore";
-import { Navigate, Link } from "react-router";
+import axios from "axios";
+import { API_URL } from "../../config";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { setLoginPop } = useContext(AuthStore);
-
   const [redirect, setRedirect] = useState(false);
+  const { setUser } = useContext(AuthStore);
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    console.log("Logged in:", username, password);
-    setUsername("");
-    setPassword("");
-    setLoginPop(true);
-    setRedirect(true);
+    try {
+      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+
+      
+      localStorage.setItem("token", res.data.token);
+
+      setUser(res.data.user);
+
+      setRedirect(true);
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+    }
   };
 
-  if (redirect) {
-    return <Navigate to="/" replace />;
-  }
+  if (redirect) return <Navigate to="/" replace />;
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900 px-4 sm:px-6">
-      <div className="bg-gray-800 p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-xs sm:max-w-sm md:max-w-md">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-500 mb-6">
-          Login
-        </h1>
+    <div className="flex items-center justify-center min-h-screen bg-gray-900 px-4">
+      <div className="bg-gray-800 p-6 rounded-lg w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-blue-500 mb-6 text-center">Login</h1>
         <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
           <input
-            type="text"
-            placeholder="Enter name"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            type="email"
+            placeholder="Enter email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="px-4 py-2 rounded bg-gray-700 text-white"
           />
           <input
             type="password"
             placeholder="Enter password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={e => setPassword(e.target.value)}
+            className="px-4 py-2 rounded bg-gray-700 text-white"
           />
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-md transition duration-300"
+            className="bg-blue-600 py-2 rounded hover:bg-blue-500 text-white"
           >
             Login
           </button>
         </form>
-
         <p className="mt-4 text-center text-gray-400 text-sm">
-          Don’t have an account?{" "}
-          <Link
-            to="/register"
-            className="text-blue-400 hover:underline hover:text-blue-300"
-          >
-            Create one
-          </Link>
+          Don’t have an account? <Link to="/register" className="text-blue-400">Create one</Link>
         </p>
       </div>
     </div>

@@ -1,11 +1,71 @@
-import React from 'react'
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_URL } from "../config";
 
 const Categories = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
+  const [entries, setEntries] = useState([]);
+  const [filter, setFilter] = useState("task"); // default filter
+  const [loading, setLoading] = useState(true);
 
-export default Categories
+  useEffect(() => {
+    const fetchEntries = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${API_URL}/api/notes`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setEntries(res.data.sort((a, b) => new Date(b.date) - new Date(a.date))); // newest first
+      } catch (err) {
+        console.error(err.response?.data || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEntries();
+  }, []);
+
+  const filteredEntries =
+    filter === "all" ? entries : entries.filter((e) => e.type === filter);
+
+  return (
+    <div className="min-h-screen flex bg-gray-900 text-white">
+      {/* Sidebar */}
+      <div className="w-1/4 p-4 border-r border-gray-700">
+        <h2 className="text-xl font-bold mb-4">Categories</h2>
+        {["task", "dairy", "memory", "reminder", "all"].map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            className={`block w-full text-left px-3 py-2 mb-2 rounded hover:bg-gray-700 ${
+              filter === cat ? "bg-gray-700 font-bold" : ""
+            }`}
+          >
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Main content */}
+      <div className="w-3/4 p-4 flex flex-col gap-4">
+        {loading ? (
+          <p>Loading...</p>
+        ) : filteredEntries.length === 0 ? (
+          <p className="text-gray-400">No entries found for {filter}.</p>
+        ) : (
+          filteredEntries.map((entry) => (
+            <div key={entry._id} className="bg-gray-800 p-4 rounded">
+              {entry.title && <h3 className="font-bold text-lg">{entry.title}</h3>}
+              <p>{entry.content}</p>
+              <span className="text-xs text-gray-400">
+                {new Date(entry.date).toLocaleString()}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Categories;

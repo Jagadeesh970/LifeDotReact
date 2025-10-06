@@ -1,52 +1,49 @@
-import { useState } from "react";
-import { Navigate, NavLink } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 const CreateNote = () => {
-  const [redirect, setRedirect] = useState(false);
+  const navigate = useNavigate();
 
-  if (redirect) {
-    return <Navigate to="/" replace />;
-  }
-
-  const links = [
-    { name: "AddTask", path: "/createnote/addtask" },
-    { name: "Dairy", path: "/createnote/dairy" },
-    { name: "Memories", path: "/createnote/memories" },
-    { name: "Reminders", path: "/createnote/reminders" },
-  ];
+  const handleCategorySelect = (type) => {
+    navigate(`/createnote/${type}`);
+  };
 
   return (
-    <div className="createnote-container p-6 min-h-screen bg-black mt-4">
-      <h1 className="text-3xl font-bold mb-6 text-center text-white">
-        Create Note
-      </h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white px-4">
+      <h1 className="text-3xl font-bold mb-6">Create Note</h1>
 
-      <div className="createnote-bar grid grid-cols-2 gap-4 max-w-lg mx-auto">
-        {links.map((link) => (
-          <NavLink
-            key={link.path}
-            to={link.path}
-            className={({ isActive }) =>
-              `text-center py-3 rounded-lg font-semibold transition ${
-                isActive
-                  ? "bg-blue-600 text-white shadow-lg"
-                  : "bg-gray-800 text-gray-300 hover:bg-blue-500 hover:text-white"
-              }`
-            }
-          >
-            {link.name}
-          </NavLink>
-        ))}
-      </div>
-
-      <div className="flex justify-center mt-8">
+      <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-6">
         <button
-          onClick={() => setRedirect(true)}
-          className="px-6 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition"
+          className="bg-green-600 py-4 rounded hover:bg-green-500"
+          onClick={() => handleCategorySelect("task")}
         >
-          Back to Home
+          Task
+        </button>
+        <button
+          className="bg-yellow-600 py-4 rounded hover:bg-yellow-500"
+          onClick={() => handleCategorySelect("dairy")}
+        >
+          Dairy
+        </button>
+        <button
+          className="bg-pink-600 py-4 rounded hover:bg-pink-500"
+          onClick={() => handleCategorySelect("memory")}
+        >
+          Memory
+        </button>
+        <button
+          className="bg-purple-600 py-4 rounded hover:bg-purple-500"
+          onClick={() => handleCategorySelect("reminder")}
+        >
+          Reminder
         </button>
       </div>
+
+      <button
+        className="bg-gray-600 px-4 py-2 rounded hover:bg-gray-500"
+        onClick={() => navigate("/")}
+      >
+        Back to Home
+      </button>
     </div>
   );
 };

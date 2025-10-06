@@ -1,63 +1,75 @@
-import React, { useState } from "react";
-import { Navigate } from "react-router";
+import { useState } from "react";
+import axios from "axios";
+import { API_URL } from "../config";
+import { useNavigate } from "react-router-dom";
 
 const Reminders = () => {
-  const [redirect, setRedirect] = useState(false);
-  const [date, setDate] = useState("");
   const [reminder, setReminder] = useState("");
+  const [date, setDate] = useState("");
+  const [reminders, setReminders] = useState([]);
+  const navigate = useNavigate();
 
-  if (redirect) {
-    return <Navigate to="/createnote" replace />;
-  }
+  const handleAddReminder = async (e) => {
+  e.preventDefault();
+  if (!reminder || !date) return;
 
-  const today = new Date().toISOString().split("T")[0];
+  try {
+    const token = localStorage.getItem("token");
+    
+    const res = await axios.post(
+      `${API_URL}/api/notes`,
+      {
+        type: "reminder",
+        title: "",
+        content: reminder,
+        date: new Date(date).toISOString()  // <-- convert to ISO string
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-  const handleAddReminder = (e) => {
-    e.preventDefault();
-    console.log("Reminder Added:", { date, reminder });
-    setDate("");
+    setReminders([...reminders, res.data]);
     setReminder("");
-  };
+    setDate("");
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+  }
+};
+
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 flex flex-col items-center">
+    <div className="min-h-screen flex flex-col items-center justify-start pt-10 px-4 bg-gray-900 text-white">
       <h1 className="text-3xl font-bold mb-6">Reminders</h1>
 
-      <form
-        onSubmit={handleAddReminder}
-        className="w-full max-w-lg bg-gray-800 p-6 rounded-lg shadow-md flex flex-col gap-4"
-      >
-        
+      <form onSubmit={handleAddReminder} className="flex flex-col gap-4 w-full max-w-lg">
         <input
           type="date"
-          min={today}  
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 rounded bg-gray-800"
         />
-
-       
         <input
           type="text"
+          placeholder="Reminder..."
           value={reminder}
           onChange={(e) => setReminder(e.target.value)}
-          placeholder="Enter your reminder..."
-          className="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 rounded bg-gray-800"
         />
-
-        <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-md transition"
-        >
-          Add Reminder
-        </button>
+        <div className="flex gap-4">
+          <button
+            type="submit"
+            className="bg-purple-600 px-4 py-2 rounded hover:bg-purple-500"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            className="bg-gray-600 px-4 py-2 rounded hover:bg-gray-500"
+            onClick={() => navigate("/createnote")}
+          >
+            Back
+          </button>
+        </div>
       </form>
-      <button
-        onClick={() => setRedirect(true)}
-        className="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition"
-      >
-        Back to Create Note
-      </button>
     </div>
   );
 };

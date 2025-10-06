@@ -1,54 +1,64 @@
 import { useState } from "react";
-import { Navigate } from "react-router";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { API_URL } from "../config";
 
 const Dairy = () => {
-  const [redirect, setRedirect] = useState(false);
+  const navigate = useNavigate();
   const [entry, setEntry] = useState("");
+  const [entries, setEntries] = useState([]);
 
-  if (redirect) {
-    return <Navigate to="/createnote" replace />;
-  }
-
-  const today = new Date().toLocaleDateString("en-GB", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    console.log("Diary Entry Saved:", entry);
-    setEntry("");
+    if (!entry.trim()) return;
+
+    try {
+      const token = localStorage.getItem("token"); // get token
+      const res = await axios.post(
+        `${API_URL}/api/notes`,
+        { type: "dairy", title: "", content: entry },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setEntries([...entries, res.data]);
+      setEntry("");
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 flex flex-col items-center">
-      <h1 className="text-3xl font-bold mb-4">My Dairy</h1>
-      <p className="text-gray-400 mb-6">{today}</p>
-      <form
-        onSubmit={handleSave}
-        className="w-full max-w-lg bg-gray-800 p-6 rounded-lg shadow-md flex flex-col gap-4"
-      >
+    <div className="min-h-screen flex flex-col items-center justify-start pt-10 px-4 bg-gray-900 text-white">
+      <h1 className="text-3xl font-bold mb-4">Dairy</h1>
+      <div className="text-gray-400 mb-2">{new Date().toLocaleDateString()}</div>
+
+      <form onSubmit={handleSave} className="w-full max-w-lg flex flex-col gap-4 mb-6">
         <textarea
+          placeholder="Write your dairy entry..."
           value={entry}
           onChange={(e) => setEntry(e.target.value)}
-          placeholder="Write your thoughts..."
-          className="w-full h-40 p-3 rounded-md bg-gray-700 text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-        ></textarea>
-        <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-md transition"
-        >
-          Save Entry
+          className="px-4 py-2 rounded bg-gray-800 h-40 resize-none"
+        />
+        <button type="submit" className="bg-yellow-600 py-2 rounded hover:bg-yellow-500">
+          Save
         </button>
       </form>
 
+      <ul className="w-full max-w-lg flex flex-col gap-2 mb-6">
+        {entries.map((e, idx) => (
+          <li key={idx} className="bg-gray-800 p-2 rounded">
+            <div className="text-gray-400 text-sm">{new Date(e.createdAt).toLocaleString()}</div>
+            <div>{e.content}</div>
+          </li>
+        ))}
+      </ul>
+
       <button
-        onClick={() => setRedirect(true)}
-        className="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition"
+        className="bg-gray-600 px-4 py-2 rounded hover:bg-gray-500"
+        onClick={() => navigate("/createnote")}
       >
-        Back to Create Note
+        Back
       </button>
     </div>
   );
