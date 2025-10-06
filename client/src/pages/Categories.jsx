@@ -4,8 +4,9 @@ import { API_URL } from "../config";
 
 const Categories = () => {
   const [entries, setEntries] = useState([]);
-  const [filter, setFilter] = useState("task"); // default filter
+  const [filter, setFilter] = useState("task");
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile sidebar toggle
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -15,7 +16,7 @@ const Categories = () => {
         const res = await axios.get(`${API_URL}/api/notes`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setEntries(res.data.sort((a, b) => new Date(b.date) - new Date(a.date))); // newest first
+        setEntries(res.data.sort((a, b) => new Date(b.date) - new Date(a.date)));
       } catch (err) {
         console.error(err.response?.data || err.message);
       } finally {
@@ -29,10 +30,22 @@ const Categories = () => {
     filter === "all" ? entries : entries.filter((e) => e.type === filter);
 
   return (
-    <div className="min-h-screen flex bg-gray-900 text-white">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-900 text-white">
       {/* Sidebar */}
-      <div className="w-1/4 p-4 border-r border-gray-700">
-        <h2 className="text-xl font-bold mb-4">Categories</h2>
+      <div
+        className={`${
+          sidebarOpen ? "block" : "hidden"
+        } md:block w-full md:w-1/4 p-4 border-b md:border-b-0 md:border-r border-gray-700 bg-gray-900`}
+      >
+        <div className="flex justify-between md:block mb-4">
+          <h2 className="text-xl font-bold">Categories</h2>
+          <button
+            className="md:hidden text-white text-xl"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            ✕
+          </button>
+        </div>
         {["task", "dairy", "memory", "reminder", "all"].map((cat) => (
           <button
             key={cat}
@@ -46,8 +59,16 @@ const Categories = () => {
         ))}
       </div>
 
+      {/* Mobile toggle button */}
+      <div className="md:hidden flex justify-between items-center p-4 bg-gray-800">
+        <h2 className="text-lg font-bold">Categories</h2>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-white text-xl">
+          ☰
+        </button>
+      </div>
+
       {/* Main content */}
-      <div className="w-3/4 p-4 flex flex-col gap-4">
+      <div className="flex-1 p-4 flex flex-col gap-4">
         {loading ? (
           <p>Loading...</p>
         ) : filteredEntries.length === 0 ? (
